@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERMARK - Watermarking Citra Digital</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        input[type="range"] {
+            cursor: pointer;
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        .preview-box {
+            background: linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6),
+                        linear-gradient(45deg, #f3f4f6 25%, transparent 25%, transparent 75%, #f3f4f6 75%, #f3f4f6);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <!-- Header -->
+    <div class="bg-indigo-600 text-white py-4 px-6 shadow-lg">
+        <h1 class="text-2xl font-bold">🔐 CYBERMARK</h1>
+        <p class="text-indigo-200 text-sm">Watermarking Citra Digital untuk Perlindungan Karya Visual Gambar</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            
+            <!-- Left Panel -->
+            <div class="space-y-4">
+                <!-- Upload Section -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">📤 Unggah Gambar</h2>
+                    
+                    <div class="space-y-4">
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                            <p class="font-semibold mb-2">Citra Host</p>
+                            <input type="file" id="coverInput" accept="image/*" class="text-sm w-full">
+                        </div>
+
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                            <p class="font-semibold mb-2">Watermark</p>
+                            <input type="file" id="watermarkInput" accept="image/*" class="text-sm w-full">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method Selection -->
+                <div class="flex gap-2">
+                    <button id="btnVisible" class="flex-1 py-3 px-4 rounded-lg font-bold bg-white text-indigo-600 border-2 border-indigo-600">
+                        👁️ Terlihat
+                    </button>
+                    <button id="btnLSB" class="flex-1 py-3 px-4 rounded-lg font-bold bg-indigo-600 text-white">
+                        🔒 LSB
+                    </button>
+                </div>
+
+                <!-- Settings -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4" id="settingsTitle">⚙️ Pengaturan LSB</h2>
+                    
+                    <!-- Visible Settings -->
+                    <div id="visibleSettings" style="display: none;">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">
+                                    Transparansi: <span id="transparencyValue">50</span>%
+                                </label>
+                                <input type="range" id="transparency" min="0" max="100" value="50" class="w-full">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">
+                                    Ukuran: <span id="sizeValue">20</span>%
+                                </label>
+                                <input type="range" id="size" min="5" max="50" value="20" class="w-full">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold mb-2">Posisi:</label>
+                                <div class="grid grid-cols-3 gap-2">
+                                    <button class="pos-btn py-2 px-3 rounded text-sm bg-indigo-600 text-white" data-pos="top_left">Kiri Atas</button>
+                                    <button class="pos-btn py-2 px-3 rounded text-sm bg-gray-100" data-pos="top_right">Kanan Atas</button>
+                                    <button class="pos-btn py-2 px-3 rounded text-sm bg-gray-100" data-pos="bottom_left">Kiri Bawah</button>
+                                    <button class="pos-btn py-2 px-3 rounded text-sm bg-gray-100" data-pos="bottom_right">Kanan Bawah</button>
+                                    <button class="pos-btn py-2 px-3 rounded text-sm bg-gray-100" data-pos="center">Tengah</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- LSB Settings -->
+                    <div id="lsbSettings">
+                        <div class="space-y-3">
+                            <button class="lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold bg-green-500 text-white" data-bits="1">
+                                1 Bit - Kualitas Tertinggi (PSNR > 50 dB)
+                            </button>
+                            <button class="lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold bg-gray-100 text-gray-700" data-bits="2">
+                                2 Bit - Sangat Bagus (PSNR ~ 48 dB)
+                            </button>
+                            <button class="lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold bg-gray-100 text-gray-700" data-bits="3">
+                                3 Bit - Bagus (PSNR ~ 45 dB)
+                            </button>
+                            <button class="lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold bg-gray-100 text-gray-700" data-bits="4">
+                                4 Bit - Dapat Diterima (PSNR ~ 42 dB)
+                            </button>
+
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
+                                <p class="font-bold text-sm text-green-800 mb-2">💡 Informasi LSB</p>
+                                <ul class="text-xs text-gray-700 space-y-1">
+                                    <li>• Sepenuhnya tidak terlihat oleh mata manusia</li>
+                                    <li>• Bit lebih rendah = kualitas gambar lebih baik</li>
+                                    <li>• Memerlukan ekstraksi untuk melihat watermark</li>
+                                    <li>• Simpan sebagai PNG untuk menjaga data LSB</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Extraction Section - NEW -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">🔓 Ekstraksi Watermark</h2>
+                    
+                    <div class="space-y-3">
+                        <div class="border-2 border-dashed border-orange-300 rounded-lg p-4">
+                            <p class="font-semibold mb-2">Upload Gambar Ber-watermark</p>
+                            <input type="file" id="extractInput" accept="image/*" class="text-sm w-full">
+                        </div>
+
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                            <p class="text-xs text-gray-700">
+                                <strong>📌 Catatan:</strong> Upload gambar yang sudah disisipkan watermark untuk mengekstrak watermark tersembunyi di dalamnya.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="space-y-4">
+                <!-- Preview -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">🖼️ Pratinjau</h2>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-semibold mb-2">Citra Host</p>
+                            <div class="preview-box bg-gray-200 rounded aspect-video flex items-center justify-center overflow-hidden">
+                                <img id="coverPreview" class="w-full h-full object-contain hidden">
+                                <span id="coverPlaceholder" class="text-gray-500 text-sm">Tidak ada gambar</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold mb-2">Watermark</p>
+                            <div class="preview-box bg-gray-200 rounded aspect-video flex items-center justify-center overflow-hidden">
+                                <img id="watermarkPreview" class="w-full h-full object-contain hidden">
+                                <span id="watermarkPlaceholder" class="text-gray-500 text-sm">Tidak ada gambar</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold mb-2">Hasil Watermark</p>
+                            <div class="preview-box bg-gray-200 rounded aspect-video flex items-center justify-center overflow-hidden">
+                                <img id="resultPreview" class="w-full h-full object-contain hidden">
+                                <span id="resultPlaceholder" class="text-gray-500 text-sm">Proses terlebih dahulu</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <p class="text-sm font-semibold mb-2">Hasil Ekstraksi</p>
+                            <div class="preview-box bg-gray-200 rounded aspect-video flex items-center justify-center overflow-hidden">
+                                <img id="extractedPreview" class="w-full h-full object-contain hidden">
+                                <span id="extractedPlaceholder" class="text-gray-500 text-sm">Ekstrak terlebih dahulu</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Metrics -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-lg font-bold mb-4">📊 Metrik Kualitas</h2>
+                    
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
+                            <p class="text-sm font-bold text-green-800">MSE</p>
+                            <p class="text-2xl font-bold text-green-900" id="mseValue">0</p>
+                        </div>
+
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 text-center">
+                            <p class="text-sm font-bold text-blue-800">PSNR</p>
+                            <p class="text-2xl font-bold text-blue-900" id="psnrValue">0 dB</p>
+                        </div>
+
+                        <div class="bg-orange-50 border-2 border-orange-200 rounded-lg p-4 text-center">
+                            <p class="text-sm font-bold text-orange-800">BER</p>
+                            <p class="text-2xl font-bold text-orange-900" id="berValue">T/A</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="space-y-3">
+                    <button id="btnProcess" class="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-bold hover:bg-indigo-700">
+                        ▶️ Proses Watermark
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="btnExtract" class="bg-orange-500 text-white py-3 px-4 rounded-lg font-bold hover:bg-orange-600">
+                            🔓 Ekstrak
+                        </button>
+                        <button id="btnDownload" class="bg-green-500 text-white py-3 px-4 rounded-lg font-bold hover:bg-green-600" disabled>
+                            💾 Simpan
+                        </button>
+                    </div>
+
+                    <button id="btnDownloadExtracted" class="w-full bg-purple-600 text-white py-3 px-4 rounded-lg font-bold hover:bg-purple-700" disabled>
+                        💾 Simpan Watermark Hasil Ekstraksi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let coverImage = null;
+        let watermarkImage = null;
+        let resultImage = null;
+        let extractedImage = null;
+        let extractSourceImage = null;
+        let method = 'lsb';
+        let transparency = 50;
+        let size = 20;
+        let position = 'top_left';
+        let lsbBits = 1;
+        let embeddedBits = 0;
+
+        // Elements
+        const coverInput = document.getElementById('coverInput');
+        const watermarkInput = document.getElementById('watermarkInput');
+        const extractInput = document.getElementById('extractInput');
+        const coverPreview = document.getElementById('coverPreview');
+        const watermarkPreview = document.getElementById('watermarkPreview');
+        const resultPreview = document.getElementById('resultPreview');
+        const extractedPreview = document.getElementById('extractedPreview');
+        const coverPlaceholder = document.getElementById('coverPlaceholder');
+        const watermarkPlaceholder = document.getElementById('watermarkPlaceholder');
+        const resultPlaceholder = document.getElementById('resultPlaceholder');
+        const extractedPlaceholder = document.getElementById('extractedPlaceholder');
+
+        // Load images
+        coverInput.addEventListener('change', (e) => loadImage(e.target.files[0], 'cover'));
+        watermarkInput.addEventListener('change', (e) => loadImage(e.target.files[0], 'watermark'));
+        extractInput.addEventListener('change', (e) => loadImage(e.target.files[0], 'extract'));
+
+        function loadImage(file, type) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (type === 'cover') {
+                    coverImage = e.target.result;
+                    coverPreview.src = coverImage;
+                    coverPreview.classList.remove('hidden');
+                    coverPlaceholder.classList.add('hidden');
+                } else if (type === 'watermark') {
+                    watermarkImage = e.target.result;
+                    watermarkPreview.src = watermarkImage;
+                    watermarkPreview.classList.remove('hidden');
+                    watermarkPlaceholder.classList.add('hidden');
+                } else if (type === 'extract') {
+                    extractSourceImage = e.target.result;
+                    alert('Gambar untuk ekstraksi berhasil dimuat!\n\nKlik tombol "Ekstrak" untuk mengekstrak watermark.');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Method selection
+        document.getElementById('btnVisible').addEventListener('click', () => {
+            method = 'visible';
+            document.getElementById('btnVisible').className = 'flex-1 py-3 px-4 rounded-lg font-bold bg-indigo-600 text-white';
+            document.getElementById('btnLSB').className = 'flex-1 py-3 px-4 rounded-lg font-bold bg-white text-indigo-600 border-2 border-indigo-600';
+            document.getElementById('visibleSettings').style.display = 'block';
+            document.getElementById('lsbSettings').style.display = 'none';
+            document.getElementById('settingsTitle').textContent = '⚙️ Pengaturan Terlihat';
+        });
+
+        document.getElementById('btnLSB').addEventListener('click', () => {
+            method = 'lsb';
+            document.getElementById('btnLSB').className = 'flex-1 py-3 px-4 rounded-lg font-bold bg-indigo-600 text-white';
+            document.getElementById('btnVisible').className = 'flex-1 py-3 px-4 rounded-lg font-bold bg-white text-indigo-600 border-2 border-indigo-600';
+            document.getElementById('visibleSettings').style.display = 'none';
+            document.getElementById('lsbSettings').style.display = 'block';
+            document.getElementById('settingsTitle').textContent = '⚙️ Pengaturan LSB';
+        });
+
+        // Visible settings
+        document.getElementById('transparency').addEventListener('input', (e) => {
+            transparency = e.target.value;
+            document.getElementById('transparencyValue').textContent = transparency;
+        });
+
+        document.getElementById('size').addEventListener('input', (e) => {
+            size = e.target.value;
+            document.getElementById('sizeValue').textContent = size;
+        });
+
+        document.querySelectorAll('.pos-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                position = e.target.dataset.pos;
+                document.querySelectorAll('.pos-btn').forEach(b => {
+                    b.className = 'pos-btn py-2 px-3 rounded text-sm bg-gray-100';
+                });
+                e.target.className = 'pos-btn py-2 px-3 rounded text-sm bg-indigo-600 text-white';
+            });
+        });
+
+        // LSB settings
+        const lsbColors = ['bg-green-500', 'bg-blue-500', 'bg-orange-500', 'bg-red-500'];
+        document.querySelectorAll('.lsb-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                lsbBits = parseInt(e.target.dataset.bits);
+                document.querySelectorAll('.lsb-btn').forEach((b, idx) => {
+                    b.className = 'lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold bg-gray-100 text-gray-700';
+                });
+                e.target.className = 'lsb-btn w-full py-3 px-4 rounded-lg text-left font-semibold ' + lsbColors[lsbBits - 1] + ' text-white';
+            });
+        });
+
+        // Process watermark
+        document.getElementById('btnProcess').addEventListener('click', () => {
+            if (!coverImage || !watermarkImage) {
+                alert('Silakan unggah kedua gambar terlebih dahulu!');
+                return;
+            }
+            if (method === 'visible') {
+                applyVisible();
+            } else {
+                applyLSB();
+            }
+        });
+
+        function applyVisible() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const cover = new Image();
+            cover.onload = () => {
+                canvas.width = cover.width;
+                canvas.height = cover.height;
+                ctx.drawImage(cover, 0, 0);
+                
+                const originalData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                const wm = new Image();
+                wm.onload = () => {
+                    const wmSize = Math.min(cover.width, cover.height) * (size / 100);
+                    let x = 20, y = 20;
+                    
+                    if (position === 'top_right') {
+                        x = cover.width - wmSize - 20;
+                        y = 20;
+                    } else if (position === 'bottom_left') {
+                        x = 20;
+                        y = cover.height - wmSize - 20;
+                    } else if (position === 'bottom_right') {
+                        x = cover.width - wmSize - 20;
+                        y = cover.height - wmSize - 20;
+                    } else if (position === 'center') {
+                        x = (cover.width - wmSize) / 2;
+                        y = (cover.height - wmSize) / 2;
+                    }
+                    
+                    ctx.globalAlpha = transparency / 100;
+                    ctx.drawImage(wm, x, y, wmSize, wmSize);
+                    ctx.globalAlpha = 1.0;
+                    
+                    const modifiedData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const metrics = calculateMetrics(originalData.data, modifiedData.data);
+                    
+                    resultImage = canvas.toDataURL('image/png');
+                    resultPreview.src = resultImage;
+                    resultPreview.classList.remove('hidden');
+                    resultPlaceholder.style.display = 'none';
+                    document.getElementById('btnDownload').disabled = false;
+                    
+                    updateMetrics(metrics.mse, metrics.psnr, 'T/A');
+                    alert('Watermark terlihat berhasil diterapkan!\n\nMSE: ' + metrics.mse + '\nPSNR: ' + metrics.psnr + ' dB');
+                };
+                wm.src = watermarkImage;
+            };
+            cover.src = coverImage;
+        }
+
+        function applyLSB() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const cover = new Image();
+            cover.onload = () => {
+                canvas.width = cover.width;
+                canvas.height = cover.height;
+                ctx.drawImage(cover, 0, 0);
+                
+                const coverData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const originalData = new Uint8ClampedArray(coverData.data);
+                
+                const wm = new Image();
+                wm.onload = () => {
+                    const wmCanvas = document.createElement('canvas');
+                    const wmCtx = wmCanvas.getContext('2d');
+                    
+                    const totalCoverPixels = canvas.width * canvas.height * 3;
+                    const maxBits = totalCoverPixels * lsbBits - 88;
+                    const maxPixels = Math.floor(maxBits / 24);
+                    
+                    let wmW = wm.width;
+                    let wmH = wm.height;
+                    
+                    if (wmW * wmH > maxPixels) {
+                        const ratio = Math.sqrt(maxPixels / (wmW * wmH));
+                        wmW = Math.max(Math.floor(wmW * ratio), 10);
+                        wmH = Math.max(Math.floor(wmH * ratio), 10);
+                    }
+                    
+                    wmCanvas.width = wmW;
+                    wmCanvas.height = wmH;
+                    wmCtx.drawImage(wm, 0, 0, wmW, wmH);
+                    
+                    const wmData = wmCtx.getImageData(0, 0, wmW, wmH);
+                    const header = 'WM' + wmW.toString().padStart(4, '0') + wmH.toString().padStart(4, '0') + lsbBits;
+                    
+                    const wmBytes = [];
+                    for (let i = 0; i < wmData.data.length; i += 4) {
+                        wmBytes.push(wmData.data[i]);
+                        wmBytes.push(wmData.data[i+1]);
+                        wmBytes.push(wmData.data[i+2]);
+                    }
+                    
+                    const headerBytes = [];
+                    for (let i = 0; i < header.length; i++) {
+                        headerBytes.push(header.charCodeAt(i));
+                    }
+                    
+                    const allBytes = [...headerBytes, ...wmBytes];
+                    let bitString = '';
+                    for (let byte of allBytes) {
+                        bitString += byte.toString(2).padStart(8, '0');
+                    }
+                    
+                    const mask = (0xFF << lsbBits) & 0xFF;
+                    let bitIdx = 0;
+                    
+                    const rgbIndices = [];
+                    for (let i = 0; i < coverData.data.length; i++) {
+                        if ((i + 1) % 4 !== 0) {
+                            rgbIndices.push(i);
+                        }
+                    }
+                    
+                    for (let i = 0; i < rgbIndices.length && bitIdx < bitString.length; i++) {
+                        const idx = rgbIndices[i];
+                        coverData.data[idx] = coverData.data[idx] & mask;
+                        
+                        let bits = '';
+                        for (let j = 0; j < lsbBits && bitIdx < bitString.length; j++) {
+                            bits += bitString[bitIdx++];
+                        }
+                        bits = bits.padEnd(lsbBits, '0');
+                        coverData.data[idx] |= parseInt(bits, 2);
+                    }
+                    
+                    ctx.putImageData(coverData, 0, 0);
+                    resultImage = canvas.toDataURL('image/png');
+                    resultPreview.src = resultImage;
+                    resultPreview.classList.remove('hidden');
+                    resultPlaceholder.style.display = 'none';
+                    document.getElementById('btnDownload').disabled = false;
+                    embeddedBits = lsbBits;
+                    
+                    const metrics = calculateMetrics(originalData, coverData.data);
+                    updateMetrics(metrics.mse, metrics.psnr, 'T/A');
+                    
+                    alert('Watermark LSB berhasil disematkan!\n\n' + lsbBits + '-bit LSB\nWatermark: ' + wmW + 'x' + wmH + '\nMSE: ' + metrics.mse + '\nPSNR: ' + metrics.psnr + ' dB');
+                };
+                wm.src = watermarkImage;
+            };
+            cover.src = coverImage;
+        }
+
+        function calculateMetrics(img1Data, img2Data) {
+            let mseSum = 0;
+            const len = img1Data.length;
+            
+            for (let i = 0; i < len; i += 4) {
+                const r1 = img1Data[i], g1 = img1Data[i+1], b1 = img1Data[i+2];
+                const r2 = img2Data[i], g2 = img2Data[i+1], b2 = img2Data[i+2];
+                mseSum += Math.pow(r1-r2, 2) + Math.pow(g1-g2, 2) + Math.pow(b1-b2, 2);
+            }
+            
+            const mse = mseSum / len;
+            const psnr = mse === 0 ? 100 : 10 * Math.log10((255 * 255) / mse);
+            return { mse: mse.toFixed(4), psnr: psnr.toFixed(2) };
+        }
+
+        function updateMetrics(mse, psnr, ber) {
+            document.getElementById('mseValue').textContent = mse;
+            document.getElementById('psnrValue').textContent = psnr + ' dB';
+            document.getElementById('berValue').textContent = ber;
+        }
+
+        // Extract watermark - IMPROVED
+        document.getElementById('btnExtract').addEventListener('click', () => {
+            // Prioritas: gunakan gambar dari upload ekstraksi, kalau tidak ada gunakan hasil watermark
+            const imageToExtract = extractSourceImage || resultImage;
+            
+            if (!imageToExtract) {
+                alert('Silakan upload gambar ber-watermark atau proses gambar terlebih dahulu!');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+                
+                const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const bitsToTry = embeddedBits > 0 ? [embeddedBits, 1, 2, 3, 4] : [1, 2, 3, 4];
+                
+                let extracted = null;
+                let usedBits = null;
+                
+                for (let nBits of bitsToTry) {
+                    try {
+                        const result = tryExtract(data.data, nBits);
+                        if (result) {
+                            extracted = result;
+                            usedBits = nBits;
+                            break;
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                
+                if (!extracted) {
+                    alert('Gagal mengekstrak watermark\n\nTidak ditemukan watermark yang valid.\n\nPastikan gambar telah disisipkan watermark dengan metode LSB.');
+                    return;
+                }
+                
+                extractedImage = extracted.dataUrl;
+                extractedPreview.src = extractedImage;
+                extractedPreview.classList.remove('hidden');
+                extractedPlaceholder.style.display = 'none';
+                document.getElementById('btnDownloadExtracted').disabled = false;
+                
+                if (watermarkImage) {
+                    const wmImg = new Image();
+                    wmImg.onload = () => {
+                        const wmCanvas = document.createElement('canvas');
+                        const wmCtx = wmCanvas.getContext('2d');
+                        wmCanvas.width = extracted.width;
+                        wmCanvas.height = extracted.height;
+                        wmCtx.drawImage(wmImg, 0, 0, extracted.width, extracted.height);
+                        const wmData = wmCtx.getImageData(0, 0, extracted.width, extracted.height);
+                        
+                        let errorBits = 0;
+                        let totalBits = 0;
+                        
+                        for (let i = 0; i < wmData.data.length; i += 4) {
+                            for (let j = 0; j < 3; j++) {
+                                const origByte = wmData.data[i + j];
+                                const extrByte = extracted.data[i + j];
+                                const xor = origByte ^ extrByte;
+                                errorBits += xor.toString(2).split('1').length - 1;
+                                totalBits += 8;
+                            }
+                        }
+                        
+                        const ber = ((errorBits / totalBits) * 100).toFixed(4);
+                        updateMetrics(document.getElementById('mseValue').textContent.replace(' dB', ''), 
+                                    document.getElementById('psnrValue').textContent.replace(' dB', ''), 
+                                    ber + '%');
+                        
+                        const quality = ber == 0 ? 'Sempurna' : ber < 0.1 ? 'Sangat Baik' : 
+                                       ber < 1 ? 'Baik Sekali' : ber < 5 ? 'Baik' : 'Kurang';
+                        alert('Watermark berhasil diekstrak!\n\nUkuran: ' + extracted.width + 'x' + extracted.height + '\nMetode: ' + usedBits + '-bit LSB\nBER: ' + ber + '%\nKualitas: ' + quality);
+                    };
+                    wmImg.src = watermarkImage;
+                } else {
+                    alert('Watermark berhasil diekstrak!\n\nUkuran: ' + extracted.width + 'x' + extracted.height + '\nMetode: ' + usedBits + '-bit LSB');
+                }
+            };
+            img.src = imageToExtract;
+        });
+
+        function tryExtract(stegoData, nBits) {
+            const mask = (1 << nBits) - 1;
+            const rgbIndices = [];
+            for (let i = 0; i < stegoData.length; i++) {
+                if ((i + 1) % 4 !== 0) rgbIndices.push(i);
+            }
+            
+            let bitString = '';
+            for (let i = 0; i < rgbIndices.length; i++) {
+                const idx = rgbIndices[i];
+                const extractedBits = (stegoData[idx] & mask).toString(2).padStart(nBits, '0');
+                bitString += extractedBits;
+            }
+            
+            if (bitString.length < 88) throw new Error('Data tidak cukup');
+            
+            const headerBytes = [];
+            for (let i = 0; i < 88; i += 8) {
+                const byte = bitString.substr(i, 8);
+                headerBytes.push(parseInt(byte, 2));
+            }
+            
+            const header = String.fromCharCode(...headerBytes);
+            if (!header.startsWith('WM')) throw new Error('Header tidak valid');
+            
+            const w = parseInt(header.substr(2, 4));
+            const h = parseInt(header.substr(6, 4));
+            
+            if (w <= 0 || h <= 0 || w > 10000 || h > 10000) throw new Error('Dimensi tidak valid');
+            
+            const wmPixels = w * h;
+            const totalBitsNeeded = 88 + (wmPixels * 24);
+            if (bitString.length < totalBitsNeeded) throw new Error('Data tidak cukup');
+            
+            const wmBytes = [];
+            for (let i = 88; i < totalBitsNeeded; i += 8) {
+                const byte = bitString.substr(i, 8);
+                if (byte.length === 8) wmBytes.push(parseInt(byte, 2));
+            }
+            
+            if (wmBytes.length < wmPixels * 3) throw new Error('Data watermark tidak cukup');
+            
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.createImageData(w, h);
+            
+            for (let i = 0; i < wmPixels; i++) {
+                const pixelIdx = i * 4;
+                const dataIdx = i * 3;
+                imgData.data[pixelIdx] = wmBytes[dataIdx];
+                imgData.data[pixelIdx + 1] = wmBytes[dataIdx + 1];
+                imgData.data[pixelIdx + 2] = wmBytes[dataIdx + 2];
+                imgData.data[pixelIdx + 3] = 255;
+            }
+            
+            ctx.putImageData(imgData, 0, 0);
+            return {
+                dataUrl: canvas.toDataURL('image/png'),
+                width: w,
+                height: h,
+                data: imgData.data
+            };
+        }
+
+        // Download buttons
+        document.getElementById('btnDownload').addEventListener('click', () => {
+            if (resultImage) downloadImage(resultImage, 'cybermark_watermarked.png');
+        });
+
+        document.getElementById('btnDownloadExtracted').addEventListener('click', () => {
+            if (extractedImage) downloadImage(extractedImage, 'cybermark_extracted.png');
+        });
+
+        function downloadImage(imgSrc, filename) {
+            const a = document.createElement('a');
+            a.href = imgSrc;
+            a.download = filename;
+            a.click();
+        }
+    </script>
+</body>
+</html>
